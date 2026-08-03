@@ -31,6 +31,14 @@ dist/
 build/
 .ipynb_checkpoints/
 
+# --- LLM call cache ---
+.cache/
+
+# --- Node / web ---
+node_modules/
+web/dist/
+web/.vite/
+
 # --- local build instruction, reference only, never committed ---
 # INSTRUCTION-SET.md is the paste-ready build prompt for an autonomous coding session.
 # It is deliberately untracked: it describes how this repo gets built, which is not part

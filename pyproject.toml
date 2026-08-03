@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "self-healing-agent"
+version = "0.1.0"
+description = "Self-healing code-generation agent with hardened Docker sandboxes"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Bravim Purohit", email = "bravimpurohit1305@gmail.com" }]
+
+dependencies = [
+    "docker==7.1.0",
+    "pydantic==2.11.3",
+    "httpx==0.28.1",
+    "pyyaml==6.0.2",
+    "fastapi==0.115.12",
+    "uvicorn[standard]==0.34.2",
+    "sse-starlette==2.2.1",
+    "opentelemetry-api==1.33.0",
+    "opentelemetry-sdk==1.33.0",
+    "opentelemetry-exporter-otlp==1.33.0",
+    "opentelemetry-instrumentation-fastapi==0.54b0",
+    "dspy==2.6.23",
+    "braintrust==0.0.189",
+    "langsmith==0.3.42",
+    "numpy==2.2.6",
+    "scipy==1.15.3",
+    "rich==14.0.0",
+    "tenacity==9.1.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.0",
+    "pytest-asyncio==1.0.0",
+    "pytest-timeout==2.4.0",
+    "mypy==1.16.0",
+    "ruff==0.11.12",
+    "types-PyYAML>=6.0.12",
+    "types-docker>=7.1.0",
+]
+finetune = [
+    "torch>=2.4.0",
+    "transformers>=4.47.0",
+    "peft>=0.14.0",
+    "bitsandbytes>=0.45.0",
+    "trl>=0.14.0",
+    "datasets>=3.2.0",
+    "accelerate>=1.2.0",
+]
+
+[project.scripts]
+shc = "shc.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "containment: adversarial sandbox containment tests (must pass before any agent code runs)",
+    "slow: tests that take >10s",
+]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["docker.*", "dspy.*", "braintrust.*", "langsmith.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "DTZ", "T20", "RET", "SIM", "TCH"]
+ignore = ["S101", "S603", "S607"]  # allow assert in tests, subprocess calls
+
+[tool.ruff.lint.isort]
+known-first-party = ["shc"]
