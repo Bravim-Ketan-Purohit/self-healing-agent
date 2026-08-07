@@ -1,0 +1,5 @@
+id: zip_longest
+tier: T0
+entrypoint: solution.py
+timeout: 10
+solvable: true

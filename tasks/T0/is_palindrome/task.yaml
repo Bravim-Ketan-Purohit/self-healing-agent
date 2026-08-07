@@ -1,0 +1,5 @@
+id: is_palindrome
+tier: T0
+entrypoint: solution.py
+timeout: 10
+solvable: true

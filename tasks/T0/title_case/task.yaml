@@ -1,0 +1,5 @@
+id: title_case
+tier: T0
+entrypoint: solution.py
+timeout: 10
+solvable: true

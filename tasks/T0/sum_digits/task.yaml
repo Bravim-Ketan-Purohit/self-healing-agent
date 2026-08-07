@@ -1,0 +1,5 @@
+id: sum_digits
+tier: T0
+entrypoint: solution.py
+timeout: 10
+solvable: true
