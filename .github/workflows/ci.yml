@@ -26,4 +26,10 @@ jobs:
         run: ruff check .
 
       - name: Test
-        run: pytest -q
+        run: |
+          set +e
+          pytest -q
+          code=$?
+          set -e
+          if [ $code -eq 5 ]; then echo "No tests collected yet - passing scaffold."; exit 0; fi
+          exit $code
