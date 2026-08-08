@@ -1,0 +1,5 @@
+id: topological_sort
+tier: T1
+entrypoint: solution.py
+timeout: 15
+solvable: true

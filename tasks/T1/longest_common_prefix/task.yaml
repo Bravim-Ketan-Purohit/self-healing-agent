@@ -1,0 +1,5 @@
+id: longest_common_prefix
+tier: T1
+entrypoint: solution.py
+timeout: 15
+solvable: true

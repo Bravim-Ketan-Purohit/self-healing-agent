@@ -1,0 +1,5 @@
+id: roman_to_int
+tier: T1
+entrypoint: solution.py
+timeout: 15
+solvable: true

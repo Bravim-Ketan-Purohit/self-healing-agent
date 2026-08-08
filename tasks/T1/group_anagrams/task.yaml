@@ -1,0 +1,5 @@
+id: group_anagrams
+tier: T1
+entrypoint: solution.py
+timeout: 15
+solvable: true

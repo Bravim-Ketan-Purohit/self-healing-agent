@@ -1,0 +1,5 @@
+id: two_sum
+tier: T1
+entrypoint: solution.py
+timeout: 15
+solvable: true
