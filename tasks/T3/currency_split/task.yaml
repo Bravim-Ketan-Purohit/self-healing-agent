@@ -1,0 +1,5 @@
+id: currency_split
+tier: T3
+entrypoint: solution.py
+timeout: 15
+solvable: true

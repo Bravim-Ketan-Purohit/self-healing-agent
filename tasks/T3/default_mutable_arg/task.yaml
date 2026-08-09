@@ -1,0 +1,5 @@
+id: default_mutable_arg
+tier: T3
+entrypoint: solution.py
+timeout: 15
+solvable: true

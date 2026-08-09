@@ -1,0 +1,5 @@
+id: stable_sort_by_key
+tier: T3
+entrypoint: solution.py
+timeout: 15
+solvable: true
