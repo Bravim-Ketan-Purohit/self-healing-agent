@@ -1,0 +1,5 @@
+id: min_stack
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true

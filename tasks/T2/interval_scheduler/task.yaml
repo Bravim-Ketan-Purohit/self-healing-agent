@@ -1,0 +1,5 @@
+id: interval_scheduler
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true

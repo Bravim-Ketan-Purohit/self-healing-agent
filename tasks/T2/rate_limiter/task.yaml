@@ -1,0 +1,5 @@
+id: rate_limiter
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true

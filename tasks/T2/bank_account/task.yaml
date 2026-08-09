@@ -1,0 +1,5 @@
+id: bank_account
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true

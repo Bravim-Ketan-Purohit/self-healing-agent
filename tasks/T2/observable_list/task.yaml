@@ -1,0 +1,5 @@
+id: observable_list
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true

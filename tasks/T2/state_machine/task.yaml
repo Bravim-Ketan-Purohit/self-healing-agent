@@ -1,0 +1,5 @@
+id: state_machine
+tier: T2
+entrypoint: solution.py
+timeout: 15
+solvable: true
