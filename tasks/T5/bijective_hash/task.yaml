@@ -1,0 +1,5 @@
+id: bijective_hash
+tier: T5
+entrypoint: solution.py
+timeout: 15
+solvable: false

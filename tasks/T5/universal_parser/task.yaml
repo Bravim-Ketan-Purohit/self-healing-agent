@@ -1,0 +1,5 @@
+id: universal_parser
+tier: T5
+entrypoint: solution.py
+timeout: 15
+solvable: false

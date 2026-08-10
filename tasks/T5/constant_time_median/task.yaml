@@ -1,0 +1,5 @@
+id: constant_time_median
+tier: T5
+entrypoint: solution.py
+timeout: 15
+solvable: false

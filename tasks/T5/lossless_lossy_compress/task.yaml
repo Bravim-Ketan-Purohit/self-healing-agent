@@ -1,0 +1,5 @@
+id: lossless_lossy_compress
+tier: T5
+entrypoint: solution.py
+timeout: 15
+solvable: false

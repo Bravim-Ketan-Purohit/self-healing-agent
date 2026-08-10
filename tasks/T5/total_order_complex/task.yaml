@@ -1,0 +1,5 @@
+id: total_order_complex
+tier: T5
+entrypoint: solution.py
+timeout: 15
+solvable: false
