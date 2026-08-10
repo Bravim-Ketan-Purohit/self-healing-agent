@@ -1,0 +1,5 @@
+id: producer_consumer
+tier: T4
+entrypoint: solution.py
+timeout: 20
+solvable: true

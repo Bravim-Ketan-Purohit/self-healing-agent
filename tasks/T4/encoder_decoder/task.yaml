@@ -1,0 +1,5 @@
+id: encoder_decoder
+tier: T4
+entrypoint: solution.py
+timeout: 20
+solvable: true

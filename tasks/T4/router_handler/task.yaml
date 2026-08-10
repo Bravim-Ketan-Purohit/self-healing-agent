@@ -1,0 +1,5 @@
+id: router_handler
+tier: T4
+entrypoint: solution.py
+timeout: 20
+solvable: true

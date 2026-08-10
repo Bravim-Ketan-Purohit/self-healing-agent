@@ -1,0 +1,5 @@
+id: validator_formatter
+tier: T4
+entrypoint: solution.py
+timeout: 20
+solvable: true
