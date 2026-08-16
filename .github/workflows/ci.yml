@@ -4,32 +4,107 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.12"
+          version: "latest"
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - run: uv run ruff check shc/ tests/
+      - run: uv run ruff format --check shc/ tests/
+      - run: uv run mypy shc/ --ignore-missing-imports
 
-      - name: Install dependencies
+  containment:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - name: Build sandbox image
+        run: docker build -t shc-sandbox:latest shc/sandbox/
+      - name: Run containment tests
+        run: uv run pytest tests/test_containment.py -m containment -v --timeout=120
+
+  validate-suite:
+    runs-on: ubuntu-latest
+    needs: containment
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - name: Build sandbox image
+        run: docker build -t shc-sandbox:latest shc/sandbox/
+      - name: Validate task suite (T0-T3 only for speed)
+        run: uv run python -m shc.suite.validate --tiers T0,T1,T2,T3
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install and build frontend
+        working-directory: web
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          npm ci
+          npm run build
 
-      - name: Lint
-        run: ruff check .
-
-      - name: Test
+  nightly:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    needs: [containment, validate-suite]
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - name: Build sandbox image
+        run: docker build -t shc-sandbox:latest shc/sandbox/
+      - name: Full suite validation (all tiers)
+        run: uv run python -m shc.suite.validate
+      - name: Run benchmark (requires OPENROUTER_API_KEY)
+        if: env.OPENROUTER_API_KEY != ''
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          set +e
-          pytest -q
-          code=$?
-          set -e
-          if [ $code -eq 5 ]; then echo "No tests collected yet - passing scaffold."; exit 0; fi
-          exit $code
+          uv run shc run \
+            --models "openai/gpt-4o-mini,deepseek/deepseek-chat" \
+            --tiers "T0,T1,T2,T3" \
+            --seeds 3 \
+            --max-attempts 5
+      - name: Generate report
+        if: always()
+        run: uv run shc report --run all || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run-results
+          path: runs/
