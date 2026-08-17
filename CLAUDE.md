@@ -111,3 +111,34 @@ Milestones per `SPEC.md` §10. CI green on push; the nightly suite workflow land
 Report honestly, with denominators: "pass@1 61 % (82/134 tasks), 87 of 52 first-attempt failures resolved"
 is nonsense a reader will catch — get the arithmetic right, quote the counts, and give the CI. A bare
 "resolves 78 % of failures" is not a result.
+
+---
+
+## Extended stack additions (2026-08-17)
+
+See `SPEC.md` §12–13. Gains: a **QLoRA fine-tune on the agent's own repair traces** (this reverses the
+original no-fine-tuning non-goal), **DSPy** for the repair prompt, **Braintrust**, **LangSmith**,
+**OpenTelemetry**.
+
+**New ports** (same 7400–7499 block): `7403` Jaeger UI · `7404` OTel Collector gRPC.
+
+**New prerequisites:** `dspy`, `braintrust`, `langsmith`, `opentelemetry-sdk`. For M8 only, in a `.[finetune]`
+extra: `torch`, `transformers`, `peft`, `bitsandbytes`, `trl`, `datasets`, `accelerate`.
+
+**New hard rules:**
+
+11. **Split the trace corpus by task, never by example.** Two attempts on the same task landing on both sides
+    of the split leaks, and the resulting number is meaningless. This is the easiest mistake to make here.
+12. **Fine-tune only on traces this system generated and the hidden tests verified.** Never a public code
+    dataset — the whole point is that the labels are correct by construction.
+13. **Evaluate the fine-tune as a full arm**: same graded suite, same seeds, same anti-gaming checks. Report
+    resolution rate, cost per resolved failure, and latency against the prompted baseline.
+14. **Report a negative result as a result.** A fine-tune that fails to beat prompting is legitimate and
+    tellable. Do not iterate quietly until it wins, and do not drop the arm.
+15. **DSPy optimises on dev tiers only**; report the delta on held-out tiers. Commit the compiled artefact.
+16. **Braintrust and LangSmith are views.** `runs/*.json` stays the source of truth for every resume number.
+17. **Sandbox containers stay uninstrumented.** No network, and agent-controlled code emits no telemetry.
+18. **Note base-model contamination** in the manifest. Your T5 tier and hidden tests are the parts that are
+    provably yours.
+
+**New stop-and-ask:** before GPU spend for M8 — give the estimated cost and hours first.

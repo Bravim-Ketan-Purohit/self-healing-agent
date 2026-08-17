@@ -33,7 +33,8 @@ raw counts (`87 of 134 first-attempt failures resolved`) so nobody has to guess 
 
 - Not an IDE plugin, not a PR-opening bot, not an SWE-bench leaderboard entry.
 - No multi-file repository-scale refactoring. Task scope is one module plus its tests.
-- No fine-tuning. Prompting and orchestration only.
+- **Amended 2026-08-17:** fine-tuning is now in scope as an M8 capstone, but *only* on repair traces this
+  system generated itself — never on a public code dataset. See §12.
 - No agent-controlled network access by default (see §4 — this is a security boundary, not a limitation).
 - No human-in-the-loop. "Autonomously" is in the bullet; if a human intervenes, the run doesn't count.
 
@@ -267,3 +268,86 @@ Commit the full run JSON. Fill the README Benchmarks table from a specific commi
 | not gamed | ☐ | tamper count reported; T5 false-success rate reported |
 
 Any unchecked row ⇒ `Bravim_Purohit_AI_Engineer.tex:141` stays commented and `[XX]` stays bracketed.
+
+---
+
+## 12. Extended stack (added 2026-08-17)
+
+### 12.1 Fine-tuning on the agent's own repair traces — the capstone
+
+This reverses the original non-goal, and it's worth it, because the training data is a **by-product this
+project already produces**. Every resolved task is a triple: broken code, structured failure, working fix.
+After a full sweep you have hundreds of them, generated and *verified by the hidden tests* — labels that
+are correct by construction rather than by annotation.
+
+So the M8 experiment is:
+
+1. **Mine the corpus.** Export `(context, structured_failure, successful_patch)` from every resolved
+   attempt in committed runs. Deduplicate by task and by near-identical diff.
+2. **Split by task, never by example.** Tasks in the training set must not appear in the eval set in any
+   form. Splitting by example leaks — two attempts on the same task land on both sides, and the result is
+   meaningless.
+3. **Fine-tune a small open model** — PyTorch + HF `transformers`, **QLoRA** via `peft` + `bitsandbytes`,
+   4-bit base. A small model is the right target: the interesting claim is "a 7B specialist matches a
+   frontier model at repair for a fraction of the cost", not "a bigger model is better".
+4. **Evaluate as a first-class arm.** Run the same graded suite, same seeds, same anti-gaming checks.
+   Report resolution rate, cost per resolved failure, and latency against the prompted frontier baseline.
+5. **Report the negative result if that's what happens.** A fine-tune that fails to beat prompting is a
+   legitimate, publishable finding — and a candidate who can say "it didn't work, here's why" is more
+   credible than one whose every experiment succeeded.
+
+Contamination check: the base model may already have seen tasks resembling your suite. Note it in the
+manifest, and lean on the T5 unsolvable tier and held-out hidden tests, which are yours alone.
+
+GPU requirement: a QLoRA fine-tune of a small model is a few hours on one rented instance. Same
+infrastructure pattern as the sibling gateway project — provision, train, evaluate, destroy.
+
+### 12.2 DSPy for the repair prompt
+
+The repair prompt is the highest-leverage string in the project. Compile it with DSPy against the **dev
+tier subset only**, and report the resolution-rate delta on the held-out tiers. Same discipline as the
+fine-tune: optimise on dev, report on test, commit the compiled artefact with the optimiser and metric
+recorded.
+
+DSPy and the fine-tune are also a genuinely interesting comparison — prompt optimisation versus weight
+adaptation on the same task, with cost per resolved failure as the shared axis.
+
+### 12.3 Braintrust + LangSmith
+
+- **Braintrust** — eval run tracking, the per-model leaderboard, and regression detection across sweeps.
+  It replaces hand-rolled result comparison and gives permanent links you can show someone.
+- **LangSmith** — trace the generate → run → classify → repair loop, so a single task's full history is one
+  inspectable trace.
+
+Both are instrumentation, not measurement. `runs/*.json` in this repo remains the source of truth for every
+resume number; a dashboard is a view of it.
+
+### 12.4 OpenTelemetry
+
+Spans: `generate`, `sandbox_create`, `sandbox_exec`, `parse_failure`, `grade`, `repair`, plus one parent
+span per task and one per run. Attributes: model, tier, attempt number, failure kind, tokens, cost, exit
+code, container id. Sandbox containers stay unin­strumented — no network, and no agent-controlled code
+should be emitting telemetry.
+
+The most useful thing this buys: a flamegraph of a run showing where wall-clock actually goes. It is almost
+always container startup and test execution rather than inference, which is a counter-intuitive and very
+tellable finding.
+
+## 13. Additional milestones
+
+- **M8 Fine-tune.** Trace corpus exported with task-level splits; QLoRA fine-tune of a small model;
+  evaluated as a full arm on the graded suite; resolution rate, cost per resolved failure, and latency
+  reported against the prompted baseline; negative result reported if that's the outcome.
+- **M9 Prompt optimisation.** DSPy-compiled repair prompt, dev-tier only, delta reported on held-out tiers;
+  compiled artefact committed. DSPy vs fine-tune comparison written up.
+- **M10 Observability.** OTel end to end; Braintrust leaderboard live; LangSmith traces linked from the run
+  viewer.
+
+### Honest-claims additions
+
+| Claim | Status | Backed by |
+| --- | --- | --- |
+| fine-tuned on self-generated traces | ☐ | corpus export, task-level split, no example leakage |
+| specialist model competitive with frontier | ☐ | same suite, same seeds, cost per resolved failure |
+| prompt optimisation measured, not assumed | ☐ | DSPy compiled on dev tiers, delta on held-out tiers |
+| no train/test leakage | ☐ | split by task; contamination noted in the manifest |
