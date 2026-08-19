@@ -122,5 +122,9 @@ Where `SPEC.md` and any other document disagree, `SPEC.md` wins.
 
 ## Status
 
-Scaffold — specified, not yet implemented. This repo reserves ports **7400–7499**; up to eight sibling
+Implemented. The full loop is built — generation (`shc/llm`), per-run Docker sandbox execution
+(`shc/sandbox`), traceback parsing back into the prompt (`shc/parse`), repair iteration (`shc/agent`) — plus
+the grading and eval harness (`shc/grade`, `shc/suite`), a task set under `tasks/`, and the API. **The
+headline autonomous-resolution rate is not measured yet**, which is why the table above still reads `[XX]%`:
+producing it needs one paid LLM sweep across the task set. Everything required to run that sweep is here. This repo reserves ports **7400–7499**; up to eight sibling
 projects may run at the same time, so nothing here binds outside that block.
